@@ -3,6 +3,7 @@ import serial
 import time
 from urllib.request import urlopen
 import json
+import os
 
 
 def read_last_line(ser, whitelist: dict) -> dict:
@@ -120,7 +121,9 @@ def check_whitelist() -> dict:
     :rtype: dict
     """
 
-    with open('./whitelists/whitelist') as text:
+    dir = os.path.dirname(__file__)
+    filename = os.path.join(dir, './whitelists/whitelist')
+    with open(filename) as text:
         whitelist = eval(text.read())
     return whitelist
 

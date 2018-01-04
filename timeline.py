@@ -19,7 +19,9 @@ def check_schermwhitelist() -> dict:
     :rtype: dict
     """
 
-    with open('./whitelists/schermwhitelist') as text:
+    dir = os.path.dirname(__file__)
+    filename = os.path.join(dir, '/whitelists/shermwhitelist')
+    with open(filename) as text:
         whitelist = eval(text.read())
     return whitelist
 
