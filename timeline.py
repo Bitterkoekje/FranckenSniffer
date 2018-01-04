@@ -20,7 +20,9 @@ def check_schermwhitelist() -> dict:
     """
 
     dir = os.path.dirname(__file__)
-    filename = os.path.join(dir, '/whitelists/shermwhitelist')
+    print(dir)
+    filename = os.path.join(dir, 'whitelists/shermwhitelist')
+    print(filename)
     with open(filename) as text:
         whitelist = eval(text.read())
     return whitelist

@@ -105,11 +105,15 @@ def save_present(array: dict, t: float):
     print('Uploading: ' + url)
     urlopen(url)
 
-    with open('./present/present', 'a') as present:
+    dir = os.path.dirname(__file__)
+
+    present_file = os.path.join(dir, 'present/present')
+    with open(present_file, 'a') as present:
         present.write(str(pr_known) + '\n')
     print('Nu zijn er:', pr_known)
 
-    with open('./present/unknown', 'a') as present:
+    unknown_file = os.path.join(dir, 'present/unknown')
+    with open(unknown_file, 'a') as present:
         present.write(str(pr_unknown) + '\n')
     print('De onbekenden:', pr_unknown)
 
@@ -122,7 +126,7 @@ def check_whitelist() -> dict:
     """
 
     dir = os.path.dirname(__file__)
-    filename = os.path.join(dir, './whitelists/whitelist')
+    filename = os.path.join(dir, '/whitelists/whitelist')
     with open(filename) as text:
         whitelist = eval(text.read())
     return whitelist
