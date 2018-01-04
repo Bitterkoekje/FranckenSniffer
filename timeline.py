@@ -20,9 +20,7 @@ def check_schermwhitelist() -> dict:
     """
 
     dir = os.path.dirname(__file__)
-    print(dir)
-    filename = os.path.join(dir, 'whitelists/shermwhitelist')
-    print(filename)
+    filename = os.path.join(dir, 'whitelists/schermwhitelist')
     with open(filename) as text:
         whitelist = eval(text.read())
     return whitelist
@@ -38,7 +36,9 @@ def read_data(dt_min: datetime, dt_max: datetime):
     """
     # Get the data from the present-logfile.
     # For performace reasons, only the last part of the file is loaded. This only works on UNIX.
-    with os.popen('tail -n 100000 ./present/present') as f:
+    dir = os.path.dirname(__file__)
+    filename = os.path.join(dir, 'present/present')
+    with os.popen('tail -n 100000 ' + filename) as f:
         file = f.read()
 
     # Import the whitelist

@@ -126,7 +126,7 @@ def check_whitelist() -> dict:
     """
 
     dir = os.path.dirname(__file__)
-    filename = os.path.join(dir, '/whitelists/whitelist')
+    filename = os.path.join(dir, 'whitelists/whitelist')
     with open(filename) as text:
         whitelist = eval(text.read())
     return whitelist
