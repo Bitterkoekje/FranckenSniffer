@@ -141,7 +141,7 @@ def main():
         print('Plot saved for dates between ' + str(dt_min) + ' and ' + str(dt_max) + ' for ' + str(len(present)) +
               ' names in ' + str(time.time() - t) + ' seconds.')
 
-        time.sleep(60)
+        time.sleep(10*60)
 
 
 if __name__ == '__main__':
