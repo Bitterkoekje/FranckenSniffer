@@ -38,7 +38,7 @@ def read_data(whitelist: dict, dt_min: datetime, dt_max: datetime):
     # Get the data from the present-logfile.
     # For performace reasons, only the last part of the file is loaded. This only works on UNIX.
     dir = os.path.dirname(__file__)
-    filename = os.path.join(dir, 'present/present_new')
+    filename = os.path.join(dir, 'present/present')
     with os.popen('tail -n 100000 ' + filename) as f:
         file = f.read()
 
