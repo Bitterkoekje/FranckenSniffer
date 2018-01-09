@@ -103,7 +103,7 @@ def save_present(array: dict, t: float):
 
     pr_known.append(str(t))
     pr_unknown.append(str(t))
-    pr_unknown.append(str(datetime.datetime.fromtimestamp(t)))
+    pr_web.append(str(datetime.datetime.fromtimestamp(t)))
 
     json_string = json.dumps(pr_web)
     url = ('https://www.borrelcie.vodka/present?data=' + json_string).replace(' ', '')
