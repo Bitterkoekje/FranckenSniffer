@@ -16,13 +16,14 @@ def read_last_line(ser, whitelist: dict) -> dict:
     :rtype: dict
     """
 
-    # THIS IS A DUMMY LAST_LINE FOR DEBUGGING!
-    # ---------------------------------------
+    # # THIS IS A DUMMY LAST_LINE FOR DEBUGGING!
+    # # ---------------------------------------
     # macs = ['2c:f0:a2:d8:2e:bf', '2c:f0:23:d8:df:af', 'c0:ee:fb:42:91:99']
-    # data = [np.random.randint(-85, -60), np.random.choice(list(whitelist))]
+    # # data = [np.random.randint(-85, -60), np.random.choice(list(whitelist))]
     # data = [np.random.randint(-85, -60), np.random.choice(macs)]
-    # data = []
-    # ---------------------------------------
+    # return {'mac': data[1], 'rssi': 100 + int(data[0]), 'time': time.time(), 'name': whitelist.get(data[1], False)}
+    # # data = []
+    # # ---------------------------------------
 
     try:
         data = ser.readline().decode()[:-2].split(',')
@@ -91,9 +92,9 @@ def save_present(array: dict, t: float):
     """
     pr_known = []
     pr_unknown = []
-    for entry in list(array):
+    for entry in array:
         if array[entry]['name']:
-            pr_known.append(array[entry]['name'])
+            pr_known.append(entry)
         else:
             pr_unknown.append(entry)
 

@@ -26,9 +26,10 @@ def check_schermwhitelist() -> dict:
     return whitelist
 
 
-def read_data(dt_min: datetime, dt_max: datetime):
+def read_data(whitelist: dict, dt_min: datetime, dt_max: datetime):
     """
     Import names and timestamps from the present-logfile and return them as a dict with name:datetimes entries.
+    :param whitelist: List of known mac:name combinations
     :param dt_min:  Minimum datetime
     :param dt_max:  Maximum datetime
     :return: present
@@ -37,12 +38,9 @@ def read_data(dt_min: datetime, dt_max: datetime):
     # Get the data from the present-logfile.
     # For performace reasons, only the last part of the file is loaded. This only works on UNIX.
     dir = os.path.dirname(__file__)
-    filename = os.path.join(dir, 'present/present')
+    filename = os.path.join(dir, 'present/present_new')
     with os.popen('tail -n 100000 ' + filename) as f:
         file = f.read()
-
-    # Import the whitelist
-    whitelist = check_schermwhitelist()
 
     present = dict()
 
@@ -59,19 +57,19 @@ def read_data(dt_min: datetime, dt_max: datetime):
             if dt_min <= dt <= dt_max:
 
                 # Go through all present names and make sure they are in the whitelist
-                for name in data[:-1]:
-                    if name in whitelist.values():
+                for mac in data[:-1]:
+                    if mac in whitelist:
 
                         # If there is no entry for this name in the present dict, make one.
-                        if name not in present:
-                            present[name] = []
+                        if mac not in present:
+                            present[mac] = []
 
-                        present[name].append(dt)
+                        present[mac].append(dt)
 
     return present
 
 
-def saveplot(present: dict, dt_min: datetime, dt_max: datetime, strict_xlim: bool = True):
+def saveplot(present: dict, whitelist: dict, dt_min: datetime, dt_max: datetime, strict_xlim: bool = True):
     """
     Save a plot of present names
     :param present:     Dict of name:datetimes entries
@@ -83,11 +81,11 @@ def saveplot(present: dict, dt_min: datetime, dt_max: datetime, strict_xlim: boo
     fig, ax = plt.subplots(figsize=(16, 9))
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
-    plt.title(str(dt_min) + ' - ' + str(dt_max))
+    plt.title(dt_min.strftime('%d-%m-%Y %H:%M') + ' - ' + dt_max.strftime('%d-%m-%Y %H:%M'))
 
     # Configure the x-axis such that it takes dates.
     plt.gcf().autofmt_xdate()
-    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%y   %H:%M'))
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
 
     if dt_max - dt_min <= datetime.timedelta(hours=4):
         plt.gca().xaxis.set_major_locator(mdates.MinuteLocator(byminute=[0, 15, 30, 45]))
@@ -112,11 +110,9 @@ def saveplot(present: dict, dt_min: datetime, dt_max: datetime, strict_xlim: boo
         y = np.ones(len(present[name])) * (i + 1)
         ax.plot(present[name], y, 's', markersize=8)
 
-        # Place the name at the first datetime
-        # plt.text(min(present[name]), i+1.3, name)
 
     # Use the names as yticks
-    plt.yticks(range(1, len(present) + 1), present)
+    plt.yticks(range(1, len(present) + 1), [whitelist[mac] for mac in present])
 
     if strict_xlim or not present:
         plt.xlim(dt_min, dt_max)
@@ -131,12 +127,21 @@ def saveplot(present: dict, dt_min: datetime, dt_max: datetime, strict_xlim: boo
 
 def main():
     while True:
-        dt_max = datetime.datetime.now()
+        # dt_max = datetime.datetime.now()
+        dt_max = datetime.datetime(2018, 1, 9, 00)
         dt_min = dt_max - datetime.timedelta(hours=12)
+        strict = False
 
         t = time.time()
-        present = read_data(dt_min, dt_max)
-        saveplot(present, dt_min, dt_max, True)
+
+        # Import the whitelist
+        whitelist = check_schermwhitelist()
+
+        # Import the present-data
+        present = read_data(whitelist, dt_min, dt_max)
+
+        # Save the plot
+        saveplot(present, whitelist, dt_min, dt_max, strict)
 
         print('Plot saved for dates between ' + str(dt_min) + ' and ' + str(dt_max) + ' for ' + str(len(present)) +
               ' names in ' + str(time.time() - t) + ' seconds.')
