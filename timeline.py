@@ -127,8 +127,8 @@ def saveplot(present: dict, whitelist: dict, dt_min: datetime, dt_max: datetime,
 
 def main():
     while True:
-        # dt_max = datetime.datetime.now()
-        dt_max = datetime.datetime(2018, 1, 9, 00)
+        dt_max = datetime.datetime.now()
+        # dt_max = datetime.datetime(2018, 1, 9, 00)
         dt_min = dt_max - datetime.timedelta(hours=12)
         strict = False
 
