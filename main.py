@@ -1,6 +1,7 @@
 # noinspection PyPackageRequirements
 import serial
 import time
+import datetime
 from urllib.request import urlopen
 import json
 import os
@@ -92,16 +93,19 @@ def save_present(array: dict, t: float):
     """
     pr_known = []
     pr_unknown = []
+    pr_web = []
     for entry in array:
         if array[entry]['name']:
             pr_known.append(entry)
+            pr_web.append(array[entry]['name'])
         else:
             pr_unknown.append(entry)
 
     pr_known.append(str(t))
     pr_unknown.append(str(t))
+    pr_unknown.append(str(datetime.datetime.fromtimestamp(t)))
 
-    json_string = json.dumps(pr_known)
+    json_string = json.dumps(pr_web)
     url = ('https://www.borrelcie.vodka/present?data=' + json_string).replace(' ', '')
     print('Uploading: ' + url)
     urlopen(url)
