@@ -30,7 +30,7 @@ def read_last_line(ser, whitelist: dict) -> dict:
         print('Warning, no serial data found')
         return dict()
     else:
-        return {'mac': data[1], 'rssi': 100 + data[0], 'time': time.time(), 'name': whitelist.get(data[1], False)}
+        return {'mac': data[1], 'rssi': 100 + int(data[0]), 'time': time.time(), 'name': whitelist.get(data[1], False)}
 
 
 def update(array: dict, last_line: dict) -> dict:
