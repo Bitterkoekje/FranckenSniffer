@@ -148,9 +148,14 @@ def main():
     while True:
         t = time.time()
         last_line = read_last_line(ser, whitelist)
+
+        # Check whether a last line was returned, if not sleep for a while.
         if not last_line:
-            time.sleep(10)
-        else:
+            time.sleep(5)
+
+        # Check whether the second to last binary digit of the first byte is 0
+        # If it is 1 it is a spoofed address
+        elif not int(last_line['mac'][:2], base=16) / 2 % 2 < 1:
             array = update(array, last_line)
 
         # Save the list of present mac-addresses every two seconds
