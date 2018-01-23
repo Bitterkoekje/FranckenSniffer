@@ -45,10 +45,10 @@ def update(array: dict, last_line: dict) -> dict:
     :return: The array of present mac-addresses
     :rtype: dict
     """
-    
+
     # Storing this first gives a slight performance increase
     mac = last_line['mac']
-    
+
     # Check whether an entry exists for this mac-address.
     # If not, add an empty entry for this mac-address.
     # Otherwise, make sure the last known timestamp is more than one second old.
@@ -108,23 +108,22 @@ def save_present(array: dict, t: float):
     json_string = json.dumps(pr_web)
     url = ('https://www.borrelcie.vodka/present?data=' + json_string).replace(' ', '')
     print('Uploading: ' + url)
-    
+
     try:
-    	urlopen(url)
-    except URLError:
+        urlopen(url)
+    except OSError:
         print('URLError')
     else:
         print('URLWin')
 
+    dr = os.path.dirname(__file__)
 
-    dir = os.path.dirname(__file__)
-
-    present_file = os.path.join(dir, 'present/present')
+    present_file = os.path.join(dr, 'present/present')
     with open(present_file, 'a') as present:
         present.write(str(pr_known) + '\n')
     print('Nu zijn er:', pr_known)
 
-    unknown_file = os.path.join(dir, 'present/unknown')
+    unknown_file = os.path.join(dr, 'present/unknown')
     with open(unknown_file, 'a') as present:
         present.write(str(pr_unknown) + '\n')
     print('De onbekenden:', pr_unknown)
@@ -137,8 +136,8 @@ def check_whitelist() -> dict:
     :rtype: dict
     """
 
-    dir = os.path.dirname(__file__)
-    filename = os.path.join(dir, 'whitelists/whitelist')
+    dr = os.path.dirname(__file__)
+    filename = os.path.join(dr, 'whitelists/whitelist')
     with open(filename) as text:
         whitelist = eval(text.read())
     return whitelist
@@ -162,13 +161,13 @@ def main():
 
         # Check whether the second to last binary digit of the first byte is 0
         # If it is 1 it is a spoofed address
-        elif not int(last_line['mac'][:2], base=16) / 2 % 2 < 1:
+        elif int(last_line['mac'][:2], base=16) / 2 % 2 < 1:
             array = update(array, last_line)
 
         # Save the list of present mac-addresses every two seconds
         if t - save_pr_time > 2:
             array = pop_timed_out(array, t)
-            save_present(array, t)
+            # save_present(array, t)
             save_pr_time = t
 
         # Check whitelist every 30 minutes
