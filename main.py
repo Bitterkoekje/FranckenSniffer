@@ -108,7 +108,14 @@ def save_present(array: dict, t: float):
     json_string = json.dumps(pr_web)
     url = ('https://www.borrelcie.vodka/present?data=' + json_string).replace(' ', '')
     print('Uploading: ' + url)
-    urlopen(url)
+    
+    try:
+    	urlopen(url)
+    except URLError:
+        print('URLError')
+    else:
+        print('URLWin')
+
 
     dir = os.path.dirname(__file__)
 
