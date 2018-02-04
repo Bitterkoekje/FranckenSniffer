@@ -5,6 +5,7 @@ import datetime
 from urllib.request import urlopen
 import json
 import os
+import hashlib
 
 
 def read_last_line(ser, whitelist: dict) -> dict:
@@ -19,16 +20,30 @@ def read_last_line(ser, whitelist: dict) -> dict:
 
     # # THIS IS A DUMMY LAST_LINE FOR DEBUGGING!
     # # ---------------------------------------
-    # macs = ['2c:f0:a2:d8:2e:bf', '2c:f0:23:d8:df:af', 'c0:ee:fb:42:91:99']
+    # macs = ['2c:f0:a2:d8:2e:bf', '2c:f0:23:d7:df:af', '2c:f0:23:d0:df:af']
     # # data = [np.random.randint(-85, -60), np.random.choice(list(whitelist))]
     # data = [np.random.randint(-85, -60), np.random.choice(macs)]
     # return {'mac': data[1], 'rssi': 100 + int(data[0]), 'time': time.time(), 'name': whitelist.get(data[1], False)}
     # # data = []
     # # ---------------------------------------
-
     try:
+        # Reas the line and split it
         data = ser.readline().decode()[:-2].split(',')
-        datadict = {'mac': data[1], 'rssi': 100 + int(data[0]), 'time': time.time(), 'name': whitelist.get(data[1], False)}
+        mac = data[1]
+
+        # Check whether the second to last binary digit of the first byte is 0
+        # If it is 1 it is a spoofed address
+        if int(mac[:2], base=16) / 2 % 2 < 1:
+
+            # If the mac adress is not in the whitelist, use a hash instead
+            if not whitelist.get(mac, False):
+                h = hashlib.sha256('hoax'.encode('utf-8'))
+                h.update(mac.encode('utf-8'))
+                datadict = {'mac': h.hexdigest()[:16], 'rssi': 100 + int(data[0]), 'time': time.time(), 'name': False}
+            else:
+                datadict = {'mac': mac, 'rssi': 100 + int(data[0]), 'time': time.time(), 'name': whitelist.get(data[1])}
+        else:
+            return dict()
     except AttributeError:
         print('Warning, no serial data found')
         return dict()
@@ -37,8 +52,8 @@ def read_last_line(ser, whitelist: dict) -> dict:
     except ValueError:
         return dict()
     else:
-        print(datadict)
         return datadict
+
 
 def update(array: dict, last_line: dict) -> dict:
     """
@@ -53,7 +68,7 @@ def update(array: dict, last_line: dict) -> dict:
 
     # Storing this first gives a slight performance increase
     mac = last_line['mac']
-
+    # print(mac)
     # Check whether an entry exists for this mac-address.
     # If not, add an empty entry for this mac-address.
     # Otherwise, make sure the last known timestamp is more than one second old.
@@ -128,7 +143,7 @@ def save_present(array: dict, t: float):
         present.write(str(pr_known) + '\n')
     print('Nu zijn er:', pr_known)
 
-    unknown_file = os.path.join(dr, 'present/unknown')
+    unknown_file = os.path.join(dr, 'present/unknown_hash')
     with open(unknown_file, 'a') as present:
         present.write(str(pr_unknown) + '\n')
     print('De onbekenden:', pr_unknown)
@@ -162,11 +177,8 @@ def main():
 
         # Check whether a last line was returned, if not sleep for a while.
         if not last_line:
-            time.sleep(5)
-
-        # Check whether the second to last binary digit of the first byte is 0
-        # If it is 1 it is a spoofed address
-        elif int(last_line['mac'][:2], base=16) / 2 % 2 < 1:
+            time.sleep(1)
+        else:
             array = update(array, last_line)
 
         # Save the list of present mac-addresses every two seconds
