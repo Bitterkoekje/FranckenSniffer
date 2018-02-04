@@ -28,12 +28,17 @@ def read_last_line(ser, whitelist: dict) -> dict:
 
     try:
         data = ser.readline().decode()[:-2].split(',')
+        datadict = {'mac': data[1], 'rssi': 100 + int(data[0]), 'time': time.time(), 'name': whitelist.get(data[1], False)}
     except AttributeError:
         print('Warning, no serial data found')
         return dict()
+    except IndexError:
+        return dict()
+    except ValueError:
+        return dict()
     else:
-        return {'mac': data[1], 'rssi': 100 + int(data[0]), 'time': time.time(), 'name': whitelist.get(data[1], False)}
-
+        print(datadict)
+        return datadict
 
 def update(array: dict, last_line: dict) -> dict:
     """
@@ -146,7 +151,7 @@ def check_whitelist() -> dict:
 def main():
     t = time.time()
     whitelist = check_whitelist()
-    ser = serial.Serial('/dev/ttyUSB0', 115200)
+    ser = serial.Serial('/dev/ttyUSB0', 115200, timeout=1)
 
     array = dict()
     save_pr_time = t
@@ -167,7 +172,7 @@ def main():
         # Save the list of present mac-addresses every two seconds
         if t - save_pr_time > 2:
             array = pop_timed_out(array, t)
-            # save_present(array, t)
+            save_present(array, t)
             save_pr_time = t
 
         # Check whitelist every 30 minutes
