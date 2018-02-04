@@ -27,7 +27,7 @@ def read_last_line(ser, whitelist: dict) -> dict:
     # # data = []
     # # ---------------------------------------
     try:
-        # Reas the line and split it
+        # Read the line and split it
         data = ser.readline().decode()[:-2].split(',')
         mac = data[1]
 
@@ -39,9 +39,9 @@ def read_last_line(ser, whitelist: dict) -> dict:
             if not whitelist.get(mac, False):
                 h = hashlib.sha256('hoax'.encode('utf-8'))
                 h.update(mac.encode('utf-8'))
-                datadict = {'mac': h.hexdigest()[:16], 'rssi': 100 + int(data[0]), 'time': time.time(), 'name': False}
+                datadict = {'mac': h.hexdigest()[:16], 'time': time.time(), 'name': False}
             else:
-                datadict = {'mac': mac, 'rssi': 100 + int(data[0]), 'time': time.time(), 'name': whitelist.get(data[1])}
+                datadict = {'mac': mac, 'time': time.time(), 'name': whitelist.get(mac)}
         else:
             return dict()
     except AttributeError:
