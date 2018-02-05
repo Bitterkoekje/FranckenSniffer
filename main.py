@@ -78,7 +78,7 @@ def update(array: dict, last_line: dict) -> dict:
         return array
 
     # Add the timestamp to the entry.
-    array[mac]['data'].append({'time': last_line['time'], 'rssi': last_line['rssi']})
+    array[mac]['data'].append({'time': last_line['time']})
 
     return array
 
@@ -168,6 +168,11 @@ def main():
     whitelist = check_whitelist()
     ser = serial.Serial('/dev/ttyUSB0', 115200, timeout=1)
 
+    ser.setDTR(False)
+    time.sleep(1)
+    ser.setDTR(True)
+
+    # This resets the data-terminal-ready line
     array = dict()
     save_pr_time = t
     check_wl_time = t
@@ -181,8 +186,8 @@ def main():
         else:
             array = update(array, last_line)
 
-        # Save the list of present mac-addresses every two seconds
-        if t - save_pr_time > 2:
+        # Save the list of present mac-addresses every five seconds
+        if t - save_pr_time > 5:
             array = pop_timed_out(array, t)
             save_present(array, t)
             save_pr_time = t
