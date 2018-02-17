@@ -6,9 +6,10 @@ from urllib.request import urlopen
 import json
 import os
 import hashlib
+from whitelist_handler import Whitelist
 
 
-def read_last_line(ser, whitelist: dict) -> dict:
+def read_last_line(ser, whitelist: Whitelist) -> dict:
     """
     Reads the last line from the serial port (ser) and return the data as a dictionary.
 
@@ -18,14 +19,6 @@ def read_last_line(ser, whitelist: dict) -> dict:
     :rtype: dict
     """
 
-    # # THIS IS A DUMMY LAST_LINE FOR DEBUGGING!
-    # # ---------------------------------------
-    # macs = ['2c:f0:a2:d8:2e:bf', '2c:f0:23:d7:df:af', '2c:f0:23:d0:df:af']
-    # # data = [np.random.randint(-85, -60), np.random.choice(list(whitelist))]
-    # data = [np.random.randint(-85, -60), np.random.choice(macs)]
-    # return {'mac': data[1], 'rssi': 100 + int(data[0]), 'time': time.time(), 'name': whitelist.get(data[1], False)}
-    # # data = []
-    # # ---------------------------------------
     try:
         # Read the line and split it
         data = ser.readline().decode()[:-2].split(',')
@@ -36,12 +29,12 @@ def read_last_line(ser, whitelist: dict) -> dict:
         if int(mac[:2], base=16) / 2 % 2 < 1:
 
             # If the mac adress is not in the whitelist, use a hash instead
-            if not whitelist.get(mac, False):
+            if not whitelist.macs.get(mac, False):
                 h = hashlib.sha256('hoax'.encode('utf-8'))
                 h.update(mac.encode('utf-8'))
-                datadict = {'mac': h.hexdigest()[:16], 'time': time.time(), 'name': False}
+                datadict = {'mac': h.hexdigest()[:16], 'time': time.time(), 'id': -1}
             else:
-                datadict = {'mac': mac, 'time': time.time(), 'name': whitelist.get(mac)}
+                datadict = {'mac': mac, 'time': time.time(), 'id': whitelist.macs.get(mac)}
         else:
             return dict()
     except AttributeError:
@@ -73,12 +66,12 @@ def update(array: dict, last_line: dict) -> dict:
     # If not, add an empty entry for this mac-address.
     # Otherwise, make sure the last known timestamp is more than one second old.
     if mac not in array:
-        array[mac] = {'data': [], 'name': last_line['name']}
-    elif last_line['time'] - array[mac]['data'][-1]['time'] < 1:
+        array[mac] = {'times': [], 'id': last_line['id']}
+    elif last_line['time'] - array[mac]['times'][-1] < 1:
         return array
 
     # Add the timestamp to the entry.
-    array[mac]['data'].append({'time': last_line['time'], 'rssi': last_line['rssi']})
+    array[mac]['times'].append(last_line['time'])
 
     return array
 
@@ -94,11 +87,11 @@ def pop_timed_out(array: dict, t: float) -> dict:
     :rtype: dict
     """
     for entry in list(array):
-        for i, d in enumerate(array[entry]['data']):
-            if t - d['time'] > 300:
-                array[entry]['data'].pop(i)
+        for i, d in enumerate(array[entry]['times']):
+            if t - d > 300:
+                array[entry]['times'].pop(i)
 
-        if not array[entry]['data']:
+        if not array[entry]['times']:
             del array[entry]
 
     return array
@@ -115,9 +108,9 @@ def save_present(array: dict, t: float):
     pr_unknown = []
     pr_web = []
     for entry in array:
-        if array[entry]['name']:
+        if array[entry]['id'] != -1:
             pr_known.append(entry)
-            pr_web.append(array[entry]['name'])
+            pr_web.append(array[entry]['id'])
         else:
             pr_unknown.append(entry)
 
@@ -130,6 +123,7 @@ def save_present(array: dict, t: float):
     print('Uploading: ' + url)
 
     try:
+        # pass
         urlopen(url)
     except OSError:
         print('URLError')
@@ -148,48 +142,48 @@ def save_present(array: dict, t: float):
         present.write(str(pr_unknown) + '\n')
     print('De onbekenden:', pr_unknown)
 
-
-def check_whitelist() -> dict:
-    """
-    Import the whitelist of mac-addresses and return it as a dict.
-    :return: whitelist
-    :rtype: dict
-    """
-
-    dr = os.path.dirname(__file__)
-    filename = os.path.join(dr, 'whitelists/whitelist')
-    with open(filename) as text:
-        whitelist = eval(text.read())
-    return whitelist
-
-
 def main():
     t = time.time()
-    whitelist = check_whitelist()
+    # whitelist = check_whitelist()
+    whitelist = Whitelist()
+    whitelist.update()
+
+    # Establish the serial connection and reset the line.
     ser = serial.Serial('/dev/ttyUSB0', 115200, timeout=1)
+    # from fake_serial import FakeSerial
+    # ser = FakeSerial()
+
+    ser.setDTR(False)
+    time.sleep(1)
+    ser.setDTR(True)
 
     array = dict()
     save_pr_time = t
     check_wl_time = t
+
     while True:
+
+        # Synchronize all times
         t = time.time()
+
+        # Read the last line from the serial port.
         last_line = read_last_line(ser, whitelist)
 
         # Check whether a last line was returned, if not sleep for a while.
-        if not last_line:
-            time.sleep(1)
-        else:
+        if last_line:
             array = update(array, last_line)
 
         # Save the list of present mac-addresses every two seconds
         if t - save_pr_time > 2:
             array = pop_timed_out(array, t)
+
             save_present(array, t)
             save_pr_time = t
 
         # Check whitelist every 30 minutes
-        if t - check_wl_time > 3600:
-            whitelist = check_whitelist()
+        if t - check_wl_time > 1800:
+            whitelist.update()
+            whitelist.get_macs_by_id(2)
             check_wl_time = t
 
 

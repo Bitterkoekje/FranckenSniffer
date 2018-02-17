@@ -4,6 +4,7 @@ import datetime
 import re
 import matplotlib
 import os
+from whitelist_handler import Whitelist
 
 matplotlib.use('Agg')
 
@@ -12,23 +13,9 @@ import matplotlib.dates as mdates
 import matplotlib.ticker as ticker
 
 
-def check_schermwhitelist() -> dict:
+def read_data(whitelist: Whitelist, dt_min: datetime, dt_max: datetime):
     """
-    Import the whitelist of mac-addresses and return it as a dict.
-    :return: whitelist
-    :rtype: dict
-    """
-
-    dir = os.path.dirname(__file__)
-    filename = os.path.join(dir, 'whitelists/schermwhitelist')
-    with open(filename) as text:
-        whitelist = eval(text.read())
-    return whitelist
-
-
-def read_data(whitelist: dict, dt_min: datetime, dt_max: datetime):
-    """
-    Import names and timestamps from the present-logfile and return them as a dict with name:datetimes entries.
+    Import names and timestamps from the present-logfile and return them as a dict with id:datetimes entries.
     :param whitelist: List of known mac:name combinations
     :param dt_min:  Minimum datetime
     :param dt_max:  Maximum datetime
@@ -37,8 +24,8 @@ def read_data(whitelist: dict, dt_min: datetime, dt_max: datetime):
     """
     # Get the data from the present-logfile.
     # For performace reasons, only the last part of the file is loaded. This only works on UNIX.
-    dir = os.path.dirname(__file__)
-    filename = os.path.join(dir, 'present/present')
+    dr = os.path.dirname(__file__)
+    filename = os.path.join(dr, 'present/present')
     with os.popen('tail -n 100000 ' + filename) as f:
         file = f.read()
 
@@ -58,20 +45,22 @@ def read_data(whitelist: dict, dt_min: datetime, dt_max: datetime):
 
                 # Go through all present names and make sure they are in the whitelist
                 for mac in data[:-1]:
-                    if mac in whitelist:
+                    if mac in whitelist.macs:
+                        id_ = whitelist.macs[mac]
 
                         # If there is no entry for this name in the present dict, make one.
-                        if mac not in present:
-                            present[mac] = []
+                        if id_ not in present:
+                            present[id_] = []
 
-                        present[mac].append(dt)
+                        present[id_].append(dt)
 
     return present
 
 
-def saveplot(present: dict, whitelist: dict, dt_min: datetime, dt_max: datetime, strict_xlim: bool = True):
+def saveplot(present: dict, whitelist: Whitelist, dt_min: datetime, dt_max: datetime, strict_xlim: bool = True):
     """
     Save a plot of present names
+    :param whitelist:   Whitelist from whitelist_handler
     :param present:     Dict of name:datetimes entries
     :param dt_min:      Minimum datetime
     :param dt_max:      Maximum datetime
@@ -106,13 +95,12 @@ def saveplot(present: dict, whitelist: dict, dt_min: datetime, dt_max: datetime,
 
     # For each name, plot its datetimes.
     # Each name get's a unique y coordinate.
-    for i, name in enumerate(present):
-        y = np.ones(len(present[name])) * (i + 1)
-        ax.plot(present[name], y, 's', markersize=8)
-
+    for i, id_ in enumerate(present):
+        y = np.ones(len(present[id_])) * (i + 1)
+        ax.plot(present[id_], y, 's', markersize=8)
 
     # Use the names as yticks
-    plt.yticks(range(1, len(present) + 1), [whitelist[mac] for mac in present])
+    plt.yticks(range(1, len(present) + 1), [whitelist.names[id_]['name'] for id_ in present])
 
     if strict_xlim or not present:
         plt.xlim(dt_min, dt_max)
@@ -126,22 +114,25 @@ def saveplot(present: dict, whitelist: dict, dt_min: datetime, dt_max: datetime,
 
 
 def main():
+    # Import the whitelist
+    whitelist = Whitelist(filters={'screen': True})
+
     while True:
+        whitelist.update()
+        # Set the begin and end datetimes to the last twelve hours
         dt_max = datetime.datetime.now()
-        # dt_max = datetime.datetime(2018, 1, 9, 00)
         dt_min = dt_max - datetime.timedelta(hours=12)
-        strict = False
 
         t = time.time()
 
-        # Import the whitelist
-        whitelist = check_schermwhitelist()
-
         # Import the present-data
         present = read_data(whitelist, dt_min, dt_max)
+        print(present)
+        for p in present:
+            print(whitelist.names[p])
 
         # Save the plot
-        saveplot(present, whitelist, dt_min, dt_max, strict)
+        saveplot(present, whitelist, dt_min, dt_max, False)
 
         print('Plot saved for dates between ' + str(dt_min) + ' and ' + str(dt_max) + ' for ' + str(len(present)) +
               ' names in ' + str(time.time() - t) + ' seconds.')
