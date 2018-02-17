@@ -142,9 +142,10 @@ def save_present(array: dict, t: float):
         present.write(str(pr_unknown) + '\n')
     print('De onbekenden:', pr_unknown)
 
+
 def main():
     t = time.time()
-    # whitelist = check_whitelist()
+
     whitelist = Whitelist()
     whitelist.update()
 
@@ -156,6 +157,7 @@ def main():
     ser.setDTR(False)
     time.sleep(1)
     ser.setDTR(True)
+    # This resets the data-terminal-ready line
 
     array = dict()
     save_pr_time = t
@@ -173,8 +175,8 @@ def main():
         if last_line:
             array = update(array, last_line)
 
-        # Save the list of present mac-addresses every two seconds
-        if t - save_pr_time > 2:
+        # Save the list of present mac-addresses every five seconds
+        if t - save_pr_time > 5:
             array = pop_timed_out(array, t)
 
             save_present(array, t)
