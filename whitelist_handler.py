@@ -7,7 +7,7 @@ class Whitelist:
         if filters is None:
             filters = dict()
 
-        self.__dr = os.path.abspath(dr)
+        self.__dr = os.path.join(os.path.dirname(__file__), dr)
 
         self.filters = filters
 
@@ -48,4 +48,3 @@ class Whitelist:
             if self.macs[mac] == int(id_):
                 macs_by_id.append(mac)
         return macs_by_id
-
