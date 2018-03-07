@@ -128,7 +128,8 @@ def save_present(array: dict, t: float):
     except OSError:
         print('URLError')
     else:
-        print('URLWin')
+        pass
+        # print('URLWin')
 
     dr = os.path.dirname(__file__)
 
