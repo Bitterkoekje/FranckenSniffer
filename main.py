@@ -176,15 +176,15 @@ def main():
         if last_line:
             array = update(array, last_line)
 
-        # Save the list of present mac-addresses every five seconds
+        # Save the list of present mac-addresses
         if t - save_pr_time > 5:
             array = pop_timed_out(array, t)
 
             save_present(array, t, whitelist)
             save_pr_time = t
 
-        # Check whitelist every 30 minutes
-        if t - check_wl_time > 1800:
+        # Check whitelist
+        if t - check_wl_time > 300:
             whitelist.update()
             whitelist.get_macs_by_id(2)
             check_wl_time = t

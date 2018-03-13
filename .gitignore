@@ -4,5 +4,8 @@ whitelists/
 whitelist_db/
 slide.png
 
+# Python
+__pycache__
+
 # virtualenv
 venv/
