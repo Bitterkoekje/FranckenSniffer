@@ -3,6 +3,7 @@ present/
 whitelists/
 whitelist_db/
 slide.png
+update_local
 
 # virtualenv
 venv/
