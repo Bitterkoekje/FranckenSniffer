@@ -3,6 +3,11 @@ present/
 whitelists/
 whitelist_db/
 slide.png
+update_local
+tests/
+renders/
+__pycache__
+settings.json
 
 # Python
 __pycache__
