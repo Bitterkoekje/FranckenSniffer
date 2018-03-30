@@ -61,7 +61,6 @@ def update(array: dict, last_line: dict) -> dict:
 
     # Storing this first gives a slight performance increase
     mac = last_line['mac']
-    # print(mac)
     # Check whether an entry exists for this mac-address.
     # If not, add an empty entry for this mac-address.
     # Otherwise, make sure the last known timestamp is more than one second old.
@@ -172,7 +171,7 @@ def main():
         # Read the last line from the serial port.
         last_line = read_last_line(ser, whitelist)
 
-        # Check whether a last line was returned, if not sleep for a while.
+        # Check whether a last line was returned.
         if last_line:
             array = update(array, last_line)
 
