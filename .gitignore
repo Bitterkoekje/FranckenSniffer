@@ -9,5 +9,8 @@ renders/
 __pycache__
 settings.json
 
+# Python
+__pycache__
+
 # virtualenv
 venv/

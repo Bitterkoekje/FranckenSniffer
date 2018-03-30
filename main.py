@@ -97,7 +97,7 @@ def pop_timed_out(array: dict, t: float) -> dict:
     return array
 
 
-def save_present(array: dict, t: float):
+def save_present(array: dict, t: float, whitelist: Whitelist):
     """
     Splits the array of present mac-addresses by known/unknown and adds a line to their respecive log files.
     Also sends the list of present-known to the online overview using json
@@ -110,7 +110,7 @@ def save_present(array: dict, t: float):
     for entry in array:
         if array[entry]['id'] != -1:
             pr_known.append(entry)
-            pr_web.append(array[entry]['id'])
+            pr_web.append(whitelist.names[array[entry]['id']]['name'])
         else:
             pr_unknown.append(entry)
 
@@ -128,7 +128,8 @@ def save_present(array: dict, t: float):
     except OSError:
         print('URLError')
     else:
-        print('URLWin')
+        pass
+        # print('URLWin')
 
     dr = os.path.dirname(__file__)
 
@@ -175,15 +176,15 @@ def main():
         if last_line:
             array = update(array, last_line)
 
-        # Save the list of present mac-addresses every five seconds
+        # Save the list of present mac-addresses
         if t - save_pr_time > 5:
             array = pop_timed_out(array, t)
 
-            save_present(array, t)
+            save_present(array, t, whitelist)
             save_pr_time = t
 
-        # Check whitelist every 30 minutes
-        if t - check_wl_time > 1800:
+        # Check whitelist
+        if t - check_wl_time > 300:
             whitelist.update()
             whitelist.get_macs_by_id(2)
             check_wl_time = t

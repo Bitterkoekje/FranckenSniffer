@@ -4,6 +4,7 @@ import datetime
 import re
 import matplotlib
 import os
+from shutil import copy2
 from whitelist_handler import Whitelist
 
 matplotlib.use('Agg')
@@ -108,8 +109,11 @@ def saveplot(present: dict, whitelist: Whitelist, dt_min: datetime, dt_max: date
     plt.ylim(0, len(present) + 1)
 
     plt.grid()
-    plt.savefig('slide.png', dpi=300)
+    plt.savefig('slide_tmp.png', dpi=300)
     plt.close('all')
+    
+    print('Moving file')
+    copy2('slide_tmp.png', 'slide.png')
     return
 
 
@@ -127,9 +131,6 @@ def main():
 
         # Import the present-data
         present = read_data(whitelist, dt_min, dt_max)
-        print(present)
-        for p in present:
-            print(whitelist.names[p])
 
         # Save the plot
         saveplot(present, whitelist, dt_min, dt_max, False)
@@ -137,7 +138,7 @@ def main():
         print('Plot saved for dates between ' + str(dt_min) + ' and ' + str(dt_max) + ' for ' + str(len(present)) +
               ' names in ' + str(time.time() - t) + ' seconds.')
 
-        time.sleep(60)
+        time.sleep(10)
 
 
 if __name__ == '__main__':
