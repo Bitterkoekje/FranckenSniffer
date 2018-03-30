@@ -7,7 +7,7 @@ update_local
 tests/
 renders/
 __pycache__
-setting.json
+settings.json
 
 # virtualenv
 venv/
