@@ -98,7 +98,14 @@ def saveplot(present: dict, whitelist: Whitelist, dt_min: datetime, dt_max: date
     # Each name get's a unique y coordinate.
     for i, id_ in enumerate(present):
         y = np.ones(len(present[id_])) * (i + 1)
-        ax.plot(present[id_], y, 's', markersize=8)
+        print(whitelist.names[id_]['buixieval'])
+        if whitelist.names[id_]['buixieval'] == 'pink' or whitelist.names[id_]['buixieval'] == 'c_pink':
+            c = '#ff99ff'
+        elif whitelist.names[id_]['buixieval'] == 'blue' or whitelist.names[id_]['buixieval'] == 'c_blue':
+            c = '#01ffff'
+        else:
+            c = '#dddddd'
+        ax.plot(present[id_], y, 's', markersize=8, color=c)
 
     # Use the names as yticks
     plt.yticks(range(1, len(present) + 1), [whitelist.names[id_]['name'] for id_ in present])
@@ -124,7 +131,7 @@ def main():
     while True:
         whitelist.update()
         # Set the begin and end datetimes to the last twelve hours
-        dt_max = datetime.datetime.now()
+        dt_max = datetime.datetime(2018, 4, 7)
         dt_min = dt_max - datetime.timedelta(hours=12)
 
         t = time.time()
