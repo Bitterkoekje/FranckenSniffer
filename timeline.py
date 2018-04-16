@@ -131,7 +131,7 @@ def main():
     while True:
         whitelist.update()
         # Set the begin and end datetimes to the last twelve hours
-        dt_max = datetime.datetime(2018, 4, 7)
+        dt_max = datetime.datetime.now()
         dt_min = dt_max - datetime.timedelta(hours=12)
 
         t = time.time()
