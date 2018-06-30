@@ -42,7 +42,7 @@ def read_data(whitelist: Whitelist, dt_min: datetime, dt_max: datetime):
 
             # Make sure the timestamp is in the specified range
             dt = datetime.datetime.fromtimestamp(float(data[-1]))
-            if dt_min <= dt <= dt_max:
+            if dt_min <= dt <= dt_max and not (datetime.time(0, 0) < dt.time() < datetime.time(8, 0)):
 
                 # Go through all present names and make sure they are in the whitelist
                 for mac in data[:-1]:
@@ -98,7 +98,7 @@ def saveplot(present: dict, whitelist: Whitelist, dt_min: datetime, dt_max: date
     # Each name get's a unique y coordinate.
     for i, id_ in enumerate(present):
         y = np.ones(len(present[id_])) * (i + 1)
-        print(whitelist.names[id_]['buixieval'])
+        # print(whitelist.names[id_]['buixieval'])
         if whitelist.names[id_]['buixieval'] == 'pink' or whitelist.names[id_]['buixieval'] == 'c_pink':
             c = '#ff99ff'
         elif whitelist.names[id_]['buixieval'] == 'blue' or whitelist.names[id_]['buixieval'] == 'c_blue':
@@ -132,7 +132,7 @@ def main():
         whitelist.update()
         # Set the begin and end datetimes to the last twelve hours
         dt_max = datetime.datetime.now()
-        dt_min = dt_max - datetime.timedelta(hours=12)
+        dt_min = dt_max - datetime.timedelta(hours=48)
 
         t = time.time()
 
