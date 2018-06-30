@@ -11,15 +11,19 @@ matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+from matplotlib.pyplot import cm
 import matplotlib.ticker as ticker
+import itertools
 
 
-def read_data(whitelist: Whitelist, dt_min: datetime, dt_max: datetime):
+def read_data(whitelist: Whitelist, dt_min: datetime, dt_max: datetime,
+              cluster: datetime.timedelta = datetime.timedelta(minutes=20)):
     """
     Import names and timestamps from the present-logfile and return them as a dict with id:datetimes entries.
     :param whitelist: List of known mac:name combinations
     :param dt_min:  Minimum datetime
     :param dt_max:  Maximum datetime
+    :param cluster: Datapoints closer together than cluster will be combined into a line
     :return: present
     :rtype: dict
     """
@@ -55,7 +59,29 @@ def read_data(whitelist: Whitelist, dt_min: datetime, dt_max: datetime):
 
                         present[id_].append(dt)
 
-    return present
+    # pprint.pprint(present)
+    lines = dict()
+    for i in present:
+        lines[i] = list()
+        # print(i)
+        dt_previous = dt_min
+        dt_start = dt_min
+        dt_end = dt_max
+        l = len(present[i])
+        for j, dt_current in enumerate(present[i]):
+            if j == 0:
+                dt_start = dt_current
+            elif dt_current - cluster > dt_previous:
+                dt_end = dt_previous
+                lines[i].append([dt_start, dt_end])
+                # print(i, whitelist.names[i]['name'], dt_start, dt_end, dt_end - dt_start)
+                dt_start = dt_current
+            elif j == l-1:
+                dt_end = dt_current
+                lines[i].append([dt_start, dt_end])
+                # print(i, whitelist.names[i]['name'], dt_start, dt_end, dt_end - dt_start, 'last')
+            dt_previous = dt_current
+    return lines
 
 
 def saveplot(present: dict, whitelist: Whitelist, dt_min: datetime, dt_max: datetime, strict_xlim: bool = True):
@@ -90,22 +116,34 @@ def saveplot(present: dict, whitelist: Whitelist, dt_min: datetime, dt_max: date
         plt.gca().xaxis.set_minor_locator(mdates.HourLocator(byhour=12))
         plt.gca().xaxis.set_major_formatter(ticker.NullFormatter())
         plt.gca().xaxis.set_minor_formatter(mdates.DateFormatter('%A\n%d-%m-%y'))
+    # plt.gca().xaxis.set_major_locator(mdates.HourLocator())
 
     ax.yaxis.set_ticks_position('left')
     ax.xaxis.set_ticks_position('bottom')
 
     # For each name, plot its datetimes.
     # Each name get's a unique y coordinate.
+    color = itertools.cycle(cm.tab10(np.linspace(0, 1, cm.tab10.N)))
+
     for i, id_ in enumerate(present):
-        y = np.ones(len(present[id_])) * (i + 1)
-        # print(whitelist.names[id_]['buixieval'])
-        if whitelist.names[id_]['buixieval'] == 'pink' or whitelist.names[id_]['buixieval'] == 'c_pink':
-            c = '#ff99ff'
-        elif whitelist.names[id_]['buixieval'] == 'blue' or whitelist.names[id_]['buixieval'] == 'c_blue':
-            c = '#01ffff'
+        if 'color' in whitelist.names[id_]:
+            c = whitelist.names[id_]['color']
         else:
-            c = '#dddddd'
-        ax.plot(present[id_], y, 's', markersize=8, color=c)
+            c = next(color)
+        y = [i+1, i+1]
+        # y = np.ones(len(present[id_])) * (i + 1)
+        # print(whitelist.names[id_]['buixieval'])
+        # if whitelist.names[id_]['buixieval'] == 'pink' or whitelist.names[id_]['buixieval'] == 'c_pink':
+        #     c = '#ff99ff'
+        # elif whitelist.names[id_]['buixieval'] == 'blue' or whitelist.names[id_]['buixieval'] == 'c_blue':
+        #     c = '#01ffff'
+        # else:
+        #     c = '#dddddd'
+
+        # ax.plot(present[id_], y, 's', markersize=8, color=c)
+        for a in present[id_]:
+            # print(id_, a)
+            ax.plot(a, y, markersize=8, linewidth=15, solid_capstyle='round', color=c)
 
     # Use the names as yticks
     plt.yticks(range(1, len(present) + 1), [whitelist.names[id_]['name'] for id_ in present])
@@ -116,6 +154,10 @@ def saveplot(present: dict, whitelist: Whitelist, dt_min: datetime, dt_max: date
     plt.ylim(0, len(present) + 1)
 
     plt.grid()
+
+    if not present:
+        print('NO DATA')
+        fig.text(0.5, 0.5, 'NO DATA', size=50, ha="center", va="bottom", color='#aaaaaa', weight='bold')
     plt.savefig('slide_tmp.png', dpi=300)
     plt.close('all')
     
@@ -131,8 +173,12 @@ def main():
     while True:
         whitelist.update()
         # Set the begin and end datetimes to the last twelve hours
-        dt_max = datetime.datetime.now()
-        dt_min = dt_max - datetime.timedelta(hours=12)
+        dt_now = datetime.datetime.now()
+        # dt_max = datetime.datetime(2018, 6, 29, 0, 0, 0)
+        dt_min = datetime.datetime.combine(dt_now.date(), datetime.time(8, 0))
+        # dt_max = datetime.datetime.combine(dt_now.date(), datetime.time(23, 59))
+        dt_max = dt_now
+        # dt_min = dt_max - datetime.timedelta(hours=12)
 
         t = time.time()
 
