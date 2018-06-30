@@ -3,16 +3,20 @@ import os
 
 class Whitelist:
 
-    def __init__(self, dr: str = 'whitelist_db', filters=None):
+    def __init__(self, dr: str = 'whitelist_db', filters=None, update: bool= True):
         if filters is None:
             filters = dict()
 
         self.__dr = os.path.join(os.path.dirname(__file__), dr)
 
+        print(self.__dr)
         self.filters = filters
 
         self.names = dict()
         self.macs = dict()
+
+        if update:
+            self.update()
 
     def update(self):
         self.update_names()
