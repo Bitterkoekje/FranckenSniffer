@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib.pyplot import cm
 import matplotlib.ticker as ticker
+import matplotlib.patheffects as pe
 import itertools
 
 
@@ -126,24 +127,22 @@ def saveplot(present: dict, whitelist: Whitelist, dt_min: datetime, dt_max: date
     color = itertools.cycle(cm.tab10(np.linspace(0, 1, cm.tab10.N)))
 
     for i, id_ in enumerate(present):
+        path_effects = []
         if 'color' in whitelist.names[id_]:
             c = whitelist.names[id_]['color']
         else:
             c = next(color)
         y = [i+1, i+1]
-        # y = np.ones(len(present[id_])) * (i + 1)
-        # print(whitelist.names[id_]['buixieval'])
-        # if whitelist.names[id_]['buixieval'] == 'pink' or whitelist.names[id_]['buixieval'] == 'c_pink':
-        #     c = '#ff99ff'
-        # elif whitelist.names[id_]['buixieval'] == 'blue' or whitelist.names[id_]['buixieval'] == 'c_blue':
-        #     c = '#01ffff'
-        # else:
-        #     c = '#dddddd'
 
-        # ax.plot(present[id_], y, 's', markersize=8, color=c)
+        lw = 15
+
+        if 'outline' in whitelist.names[id_]:
+            path_effects.append(pe.withStroke(linewidth=lw, foreground='k'))
+            lw -= 3
+
         for a in present[id_]:
             # print(id_, a)
-            ax.plot(a, y, markersize=8, linewidth=15, solid_capstyle='round', color=c)
+            ax.plot(a, y, markersize=8, linewidth=lw, solid_capstyle='round', color=c, path_effects=path_effects)
 
     # Use the names as yticks
     plt.yticks(range(1, len(present) + 1), [whitelist.names[id_]['name'] for id_ in present])
