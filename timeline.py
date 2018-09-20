@@ -14,6 +14,7 @@ import matplotlib.dates as mdates
 from matplotlib.pyplot import cm
 import matplotlib.ticker as ticker
 import matplotlib.patheffects as pe
+import matplotlib.image as image
 import itertools
 
 
@@ -95,32 +96,34 @@ def saveplot(present: dict, whitelist: Whitelist, dt_min: datetime, dt_max: date
     :param strict_xlim:
     """
 
-    fig, ax = plt.subplots(figsize=(16, 9))
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    plt.title(dt_min.strftime('%d-%m-%Y %H:%M') + ' - ' + dt_max.strftime('%d-%m-%Y %H:%M'))
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 9), gridspec_kw={'height_ratios': [6, 1]})
+    plt.subplots_adjust(bottom=0.05, top=0.95, hspace=0.15)
+    # ax1.spines["top"].set_visible(False)
+    # ax1.spines["right"].set_visible(False)
+    # plt.title(dt_min.strftime('%d-%m-%Y %H:%M') + ' - ' + dt_max.strftime('%d-%m-%Y %H:%M'))
 
     # Configure the x-axis such that it takes dates.
-    plt.gcf().autofmt_xdate()
-    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
+    # fig.autofmt_xdate()
+    ax1.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
+    ax1.xaxis.set_major_locator(mdates.HourLocator())
 
-    if dt_max - dt_min <= datetime.timedelta(hours=4):
-        plt.gca().xaxis.set_major_locator(mdates.MinuteLocator(byminute=[0, 15, 30, 45]))
-
-    elif dt_max - dt_min <= datetime.timedelta(hours=24):
-        plt.gca().xaxis.set_major_locator(mdates.HourLocator())
-
-    else:
-
-        plt.gcf().autofmt_xdate(rotation=30, ha='center')
-        plt.gca().xaxis.set_major_locator(mdates.DayLocator())
-        plt.gca().xaxis.set_minor_locator(mdates.HourLocator(byhour=12))
-        plt.gca().xaxis.set_major_formatter(ticker.NullFormatter())
-        plt.gca().xaxis.set_minor_formatter(mdates.DateFormatter('%A\n%d-%m-%y'))
+    # if dt_max - dt_min <= datetime.timedelta(hours=4):
+    #     ax1.xaxis.set_major_locator(mdates.MinuteLocator(byminute=[0, 15, 30, 45]))
+    #
+    # elif dt_max - dt_min <= datetime.timedelta(hours=24):
+    #     ax1.xaxis.set_major_locator(mdates.HourLocator())
+    #
+    # else:
+    #
+    #     plt.gcf().autofmt_xdate(rotation=30, ha='center')
+    #     ax1.xaxis.set_major_locator(mdates.DayLocator())
+    #     ax1.xaxis.set_minor_locator(mdates.HourLocator(byhour=12))
+    #     ax1.xaxis.set_major_formatter(ticker.NullFormatter())
+    #     ax1.xaxis.set_minor_formatter(mdates.DateFormatter('%A\n%d-%m-%y'))
     # plt.gca().xaxis.set_major_locator(mdates.HourLocator())
 
-    ax.yaxis.set_ticks_position('left')
-    ax.xaxis.set_ticks_position('bottom')
+    ax1.yaxis.set_ticks_position('left')
+    ax1.xaxis.set_ticks_position('bottom')
 
     # For each name, plot its datetimes.
     # Each name get's a unique y coordinate.
@@ -142,26 +145,37 @@ def saveplot(present: dict, whitelist: Whitelist, dt_min: datetime, dt_max: date
 
         for a in present[id_]:
             # print(id_, a)
-            ax.plot(a, y, markersize=8, linewidth=lw, solid_capstyle='round', color=c, path_effects=path_effects)
+            ax1.plot(a, y, markersize=8, linewidth=lw, solid_capstyle='round', color=c, path_effects=path_effects)
 
     # Use the names as yticks
-    plt.yticks(range(1, len(present) + 1), [whitelist.names[id_]['name'] for id_ in present])
+    ax1.set_yticks(range(1, len(present) + 1))
+    ax1.set_yticklabels([whitelist.names[id_]['name'] for id_ in present])
 
     if strict_xlim or not present:
-        plt.xlim(dt_min, dt_max)
+        ax1.set_xlim(dt_min, dt_max)
 
-    plt.ylim(0, len(present) + 1)
+    ax1.set_ylim(0, len(present) + 1)
 
-    plt.grid()
+    ax1.grid()
 
     if not present:
         print('NO DATA')
         fig.text(0.5, 0.5, 'NO DATA', size=50, ha="center", va="bottom", color='#aaaaaa', weight='bold')
+
+    ax2.text(-100, 250, 'Sponsored by', size=20, ha="right", va="bottom", color='#68686d', weight='bold')
+    im = image.imread('nedap.png')
+    ax2.axis('off')
+    ax2.imshow(im)
+    # size = fig.get_size_inches()*300
+    # # plt.imshow(im, aspect='auto', zorder=-1)
+    # print(size)
+    # ax.figure.figimage(im, size[0]*0.5, 100, zorder=1)
     plt.savefig('slide_tmp.png', dpi=300)
     plt.close('all')
-    
+
     print('Moving file')
     copy2('slide_tmp.png', 'slide.png')
+
     return
 
 
