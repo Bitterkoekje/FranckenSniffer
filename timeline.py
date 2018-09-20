@@ -163,7 +163,7 @@ def saveplot(present: dict, whitelist: Whitelist, dt_min: datetime, dt_max: date
         fig.text(0.5, 0.5, 'NO DATA', size=50, ha="center", va="bottom", color='#aaaaaa', weight='bold')
 
     ax2.text(-100, 250, 'Sponsored by', size=20, ha="right", va="bottom", color='#68686d', weight='bold')
-    im = image.imread('nedap.png')
+    im = image.imread('./nedap.png')
     ax2.axis('off')
     ax2.imshow(im)
     # size = fig.get_size_inches()*300
